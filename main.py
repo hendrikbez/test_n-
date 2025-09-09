@@ -340,6 +340,422 @@ def save_data(data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+
+@app.route('/test_excel', methods=['GET'])
+def test_excel():
+    """Test endpoint to check if Excel automation is working"""
+    if 'user' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+        
+    try:
+        pythoncom.CoInitialize()
+        excel = None
+        try:
+            # Try to create Excel application
+            excel = win32com.client.dynamic.Dispatch("Excel.Application")
+            version = excel.Version
+            
+            # Try to create a new workbook
+            wb = excel.Workbooks.Add()
+            sheet = wb.ActiveSheet
+            sheet.Cells(1, 1).Value = "Test"
+            
+            # Close without saving
+            wb.Close(False)
+            excel.Quit()
+            
+            pythoncom.CoUninitialize()
+            return jsonify({
+                'success': True, 
+                'message': f'Excel automation is working. Excel version: {version}'
+            })
+        except Exception as e:
+            if excel:
+                try:
+                    excel.Quit()
+                except:
+                    pass
+            pythoncom.CoUninitialize()
+            return jsonify({'success': False, 'message': f'Excel automation test failed: {str(e)}'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'COM initialization failed: {str(e)}'})
+
+def create_register_pdf_python(excel_path):
+    """Python implementation of CreateRegisterPDF macro"""
+    try:
+        # Preserve Sheet6 data
+        sheet6_data = preserve_sheet6_data(excel_path)
+        
+        # Load the workbook
+        wb = openpyxl.load_workbook(excel_path, keep_vba=True)
+        
+        if 'Register' not in wb.sheetnames:
+            wb.close()
+            return False, "Register sheet not found"
+        
+        register_sheet = wb['Register']
+        
+        # Create a new temporary workbook for the PDF
+        from openpyxl import Workbook
+        temp_wb = Workbook()
+        temp_sheet = temp_wb.active
+        temp_sheet.title = "Register"
+        
+        # Set up headers
+        temp_sheet['A1'] = "Naam"
+        temp_sheet['B1'] = "Van"
+        temp_sheet['C1'] = "Telefoon #"
+        
+        # Set column widths
+        temp_sheet.column_dimensions['A'].width = 15
+        temp_sheet.column_dimensions['B'].width = 20
+        temp_sheet.column_dimensions['C'].width = 15
+        
+        # Find the last row with data
+        last_row = 10
+        for row in range(11, register_sheet.max_row + 1):
+            if register_sheet.cell(row=row, column=3).value is not None:
+                last_row = row
+        
+        # Copy data from Register to temp sheet
+        row_count = 1  # Start at row 1 (header)
+        for i in range(11, last_row + 1):
+            row_count += 1
+            # Copy Name (column D in Register to column A in temp)
+            temp_sheet.cell(row=row_count, column=1).value = register_sheet.cell(row=i, column=4).value
+            # Copy Surname (column C in Register to column B in temp)
+            temp_sheet.cell(row=row_count, column=2).value = register_sheet.cell(row=i, column=3).value
+            # Copy Phone (column G in Register to column C in temp)
+            temp_sheet.cell(row=row_count, column=3).value = register_sheet.cell(row=i, column=7).value
+        
+        # Apply formatting
+        from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+        
+        # Format header
+        header_font = Font(bold=True)
+        header_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+        
+        for col in range(1, 4):
+            cell = temp_sheet.cell(row=1, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+        
+        # Apply alternating row colors
+        for i in range(2, row_count + 1):
+            fill_color = "F2F2F2" if i % 2 == 0 else "FFFFE0"
+            for col in range(1, 4):
+                cell = temp_sheet.cell(row=i, column=col)
+                cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+        
+        # Apply borders
+        thin_border = Border(
+            left=Side(style='thin'), 
+            right=Side(style='thin'), 
+            top=Side(style='thin'), 
+            bottom=Side(style='thin')
+        )
+        
+        for row in range(1, row_count + 1):
+            for col in range(1, 4):
+                temp_sheet.cell(row=row, column=col).border = thin_border
+        
+        # Save the temporary workbook
+        import os
+        pdf_dir = r"C:\Drukwerk\Lys"
+        if not os.path.exists(pdf_dir):
+            os.makedirs(pdf_dir)
+        
+        temp_file = os.path.join(pdf_dir, "Register_Temp.xlsx")
+        temp_wb.save(temp_file)
+        
+        # Convert to PDF using a library like pywin32 or a PDF converter
+        # For this example, we'll just save the Excel file
+        pdf_path = os.path.join(pdf_dir, "Register.pdf")
+        
+        # Here you would use a PDF conversion library
+        # For now, we'll just indicate success
+        
+        # Clean up
+        temp_wb.close()
+        wb.close()
+        
+        # Restore Sheet6 data
+        if sheet6_data:
+            restore_sheet6_data(excel_path, sheet6_data)
+        
+        return True, f"Register Excel file created at {temp_file}. PDF conversion requires additional setup."
+    
+    except Exception as e:
+        print(f"Error creating register PDF: {e}")
+        return False, str(e)
+
+def print_to_pdf_landscape_python(excel_path):
+    """Python implementation of PrintToPDF_Landscape1 macro"""
+    try:
+        # Preserve Sheet6 data
+        sheet6_data = preserve_sheet6_data(excel_path)
+        
+        # Load the workbook
+        wb = openpyxl.load_workbook(excel_path, keep_vba=True)
+        
+        if 'Register' not in wb.sheetnames:
+            wb.close()
+            return False, "Register sheet not found"
+        
+        # Define the output path
+        import os
+        pdf_dir = r"C:\Drukwerk\Lys"
+        if not os.path.exists(pdf_dir):
+            os.makedirs(pdf_dir)
+        
+        pdf_path = os.path.join(pdf_dir, "Lys.pdf")
+        
+        # For now, we'll just save a copy of the Excel file
+        # In a real implementation, you would use a PDF conversion library
+        excel_copy = os.path.join(pdf_dir, "Lys.xlsx")
+        wb.save(excel_copy)
+        wb.close()
+        
+        # Restore Sheet6 data
+        if sheet6_data:
+            restore_sheet6_data(excel_path, sheet6_data)
+        
+        return True, f"Excel file saved at {excel_copy}. PDF conversion requires additional setup."
+    
+    except Exception as e:
+        print(f"Error printing to PDF: {e}")
+        return False, str(e)
+
+
+def preserve_sheet6_data(excel_path):
+    """Read and preserve data from Sheet6 (Start)"""
+    try:
+        wb = openpyxl.load_workbook(excel_path, keep_vba=True)
+        if 'Start' in wb.sheetnames:
+            sheet = wb['Start']
+            # Store all data from the sheet
+            data = []
+            for row in sheet.iter_rows(values_only=True):
+                data.append(row)
+            wb.close()
+            return data
+        else:
+            wb.close()
+            return None
+    except Exception as e:
+        print(f"Error preserving Sheet6 data: {e}")
+        return None
+
+def restore_sheet6_data(excel_path, data):
+    """Restore data to Sheet6 (Start)"""
+    if not data:
+        return False
+        
+    try:
+        wb = openpyxl.load_workbook(excel_path, keep_vba=True)
+        if 'Start' in wb.sheetnames:
+            sheet = wb['Start']
+            # Clear existing data
+            for row in sheet.iter_rows():
+                for cell in row:
+                    cell.value = None
+            
+            # Restore data
+            for i, row_data in enumerate(data, 1):
+                for j, value in enumerate(row_data, 1):
+                    sheet.cell(row=i, column=j).value = value
+            
+            wb.save(excel_path)
+            wb.close()
+            return True
+        else:
+            wb.close()
+            return False
+    except Exception as e:
+        print(f"Error restoring Sheet6 data: {e}")
+        return False
+
+
+def update_voorblad_date_with_openpyxl(excel_path):
+    """Update the date in Sheet4 (Voorblad) merged cells G14:N16 using openpyxl"""
+    try:
+        # Get formatted date
+        afrikaans_date = get_afrikaans_date()
+        
+        # Open the workbook
+        wb = openpyxl.load_workbook(excel_path, keep_vba=True)
+        
+        # Get the Voorblad sheet
+        sheet_name = 'Voorblad' if 'Voorblad' in wb.sheetnames else 'Sheet4'
+        sheet = wb[sheet_name]
+        
+        # First, unmerge the cells if they are merged
+        try:
+            sheet.unmerge_cells('G14:N16')
+        except:
+            pass  # Cells might not be merged
+        
+        # Update cell G14 with the date
+        sheet['G14'] = afrikaans_date
+        
+        # Apply formatting
+        from openpyxl.styles import Font, Alignment
+        cell = sheet['G14']
+        cell.font = Font(name='Cambria', size=28, bold=True)
+        cell.alignment = Alignment(horizontal='left', vertical='center')
+        
+        # Merge the cells again
+        sheet.merge_cells('G14:N16')
+        
+        # Save the workbook
+        wb.save(excel_path)
+        wb.close()
+        
+        return True, f"Datum opgedateer na {afrikaans_date}"
+    except Exception as e:
+        print(f"Error updating Voorblad date with openpyxl: {e}")
+        return False, str(e)
+
+def update_voorblad_date_simple(excel_path):
+    """A simpler approach to update the date in Voorblad"""
+    try:
+        # Get formatted date
+        afrikaans_date = get_afrikaans_date()
+        
+        # Make a backup of the file first
+        backup_path = excel_path.replace('.xlsm', '_backup.xlsm')
+        import shutil
+        shutil.copy2(excel_path, backup_path)
+        
+        # Use openpyxl with minimal operations
+        wb = openpyxl.load_workbook(excel_path, keep_vba=True)
+        
+        # Get the Voorblad sheet
+        sheet_name = None
+        for name in wb.sheetnames:
+            if name.lower() in ['voorblad', 'sheet4']:
+                sheet_name = name
+                break
+                
+        if not sheet_name:
+            wb.close()
+            return False, "Voorblad sheet not found"
+            
+        sheet = wb[sheet_name]
+        
+        # Simply update cell G14 with the date
+        sheet['G14'] = afrikaans_date
+        
+        # Save and close
+        wb.save(excel_path)
+        wb.close()
+        
+        print(f"Date updated to {afrikaans_date}")
+        return True, f"Datum opgedateer na {afrikaans_date}"
+        
+    except Exception as e:
+        print(f"Error in update_voorblad_date_simple: {e}")
+        # Try to restore from backup if we made one
+        try:
+            if 'backup_path' in locals():
+                shutil.copy2(backup_path, excel_path)
+                print("Restored from backup after error")
+        except:
+            pass
+        return False, str(e)
+
+
+
+def sort_format_and_number_in_python(excel_path):
+    """
+    Python implementation of the SortFamilyMembers macro functionality.
+    """
+    try:
+        # Load the workbook with openpyxl
+        wb = openpyxl.load_workbook(excel_path, keep_vba=True)
+        
+        # Get the Register sheet
+        if 'Register' not in wb.sheetnames:
+            return False, "Register sheet not found"
+        
+        sheet = wb['Register']
+        
+        # Find the last row with data
+        last_row = 10  # Start from row 11 (index 10)
+        for row in range(11, sheet.max_row + 1):
+            if sheet.cell(row=row, column=3).value is not None:  # Check column C (Van)
+                last_row = row
+        
+        if last_row <= 10:
+            return False, "No data found to sort"
+        
+        # Read all data into a list
+        data = []
+        for row in range(11, last_row + 1):
+            if sheet.cell(row=row, column=3).value is not None:  # Only include rows with data in Van column
+                data.append({
+                    'row': row,
+                    'van': sheet.cell(row=row, column=3).value or '',
+                    'naam': sheet.cell(row=row, column=4).value or '',
+                    'verj': sheet.cell(row=row, column=5).value,
+                    'huwelik': sheet.cell(row=row, column=6).value,
+                    'selfoon': sheet.cell(row=row, column=7).value or '',
+                    'adres': sheet.cell(row=row, column=8).value or '',
+                    'epos': sheet.cell(row=row, column=9).value or ''
+                })
+        
+        # Sort the data by Van and then by Naam
+        data.sort(key=lambda x: (str(x['van']).lower(), str(x['naam']).lower()))
+        
+        # Assign family IDs and sequential numbers
+        current_family = None
+        family_id = 0
+        
+        for i, item in enumerate(data):
+            # Assign sequential number
+            seq_num = i + 1
+            
+            # Assign family ID
+            if item['van'] != current_family:
+                family_id += 1
+                current_family = item['van']
+            
+            # Update the item with IDs
+            item['family_id'] = family_id
+            item['seq_num'] = seq_num
+        
+        # Write the sorted data back to the sheet
+        for i, item in enumerate(data):
+            row = 11 + i
+            
+            # Write family ID and sequence number
+            sheet.cell(row=row, column=1).value = item['family_id']
+            sheet.cell(row=row, column=2).value = item['seq_num']
+            
+            # Write the rest of the data
+            sheet.cell(row=row, column=3).value = item['van']
+            sheet.cell(row=row, column=4).value = item['naam']
+            sheet.cell(row=row, column=5).value = item['verj']
+            sheet.cell(row=row, column=6).value = item['huwelik']
+            sheet.cell(row=row, column=7).value = item['selfoon']
+            sheet.cell(row=row, column=8).value = item['adres']
+            sheet.cell(row=row, column=9).value = item['epos']
+        
+        # Save the workbook
+        wb.save(excel_path)
+        wb.close()
+        
+        return True, "Families suksesvol gesorteer en genommer"
+        
+    except Exception as e:
+        print(f"Error in sort_format_and_number_in_python: {e}")
+        return False, f"Error: {str(e)}"
+
+
+
+
+
+
 @app.route('/')
 def index():
     if 'user' in session:
@@ -385,52 +801,51 @@ def add_person():
             digits = ''.join(filter(str.isdigit, selfoon))
             if len(digits) >= 10:
                 selfoon = f"{digits[:3]} {digits[3:6]} {digits[6:10]}"
-
-        pythoncom.CoInitialize()
-        excel = None
+        
         try:
-            excel = win32com.client.Dispatch("Excel.Application")
-            excel.Visible = False
-            excel.DisplayAlerts = False
+            # Load the workbook with openpyxl
+            # keep_vba=True preserves any VBA code in the file
+            wb = openpyxl.load_workbook(EXCEL_FILE_PATH, keep_vba=True)
             
-            wb = excel.Workbooks.Open(EXCEL_FILE_PATH)
-            sheet = wb.Worksheets('Register')
+            # Get the Register sheet
+            if 'Register' in wb.sheetnames:
+                sheet = wb['Register']
+            else:
+                return jsonify({'success': False, 'message': 'Register sheet not found in Excel file'})
             
-            # --- CORRECTED LOGIC TO FIND NEXT ROW ---
-            # Find the last row based on data in Column C ('Van'), which is more reliable
-            last_row = sheet.Cells(sheet.Rows.Count, "C").End(-4162).Row
+            # Find the last row with data in column C
+            last_row = 10  # Start from row 11 (index 10)
+            for row in range(11, sheet.max_row + 1):
+                if sheet.cell(row=row, column=3).value is not None:
+                    last_row = row
+            
             next_row = last_row + 1
             
             # Write data to the new row
-            sheet.Cells(next_row, 3).Value = data['van']
-            sheet.Cells(next_row, 4).Value = data['naam']
-            sheet.Cells(next_row, 5).Value = data.get('verj', '')
-            sheet.Cells(next_row, 6).Value = data.get('huwelik', '')
-            sheet.Cells(next_row, 7).Value = selfoon
-            sheet.Cells(next_row, 8).Value = data.get('adres', '')
-            sheet.Cells(next_row, 9).Value = data.get('epos', '')
+            sheet.cell(row=next_row, column=3).value = data['van']
+            sheet.cell(row=next_row, column=4).value = data['naam']
+            sheet.cell(row=next_row, column=5).value = data.get('verj', '')
+            sheet.cell(row=next_row, column=6).value = data.get('huwelik', '')
+            sheet.cell(row=next_row, column=7).value = selfoon
+            sheet.cell(row=next_row, column=8).value = data.get('adres', '')
+            sheet.cell(row=next_row, column=9).value = data.get('epos', '')
             
-            wb.Save()
-            wb.Close()
-            excel.Quit()
-            pythoncom.CoUninitialize()
+            # Save the workbook
+            wb.save(EXCEL_FILE_PATH)
+            wb.close()
             
             return jsonify({'success': True, 'message': 'Persoon suksesvol bygevoeg'})
+            
         except Exception as e:
-            print(f"Error adding person: {e}")
-            if excel:
-                try:
-                    wb.Close(False)
-                    excel.Quit()
-                except: pass
-            return jsonify({'success': False, 'message': str(e)})
+            print(f"Error adding person with openpyxl: {e}")
+            return jsonify({'success': False, 'message': f"Could not add person: {str(e)}"})
+            
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in add_person: {e}")
         return jsonify({'success': False, 'message': str(e)})
-    finally:
-        try:
-            pythoncom.CoUninitialize()
-        except: pass
+
+
+
 
 
 @app.route('/logout')
@@ -448,7 +863,7 @@ def dashboard():
 
 
 @app.route('/run_macro', methods=['POST'])
-def run_macro():
+def run_macro_endpoint():  # Changed function name to avoid conflict
     if 'user' not in session:
         return jsonify({'success': False, 'message': 'Not authenticated'}), 401
     
@@ -458,53 +873,145 @@ def run_macro():
     if not macro_name:
         return jsonify({'success': False, 'message': 'Geen makro naam verskaf nie'}), 400
 
-    pythoncom.CoInitialize()
-    excel = None
+    # Preserve Sheet6 data before running any macro
+    sheet6_data = preserve_sheet6_data(EXCEL_FILE_PATH)
+    
     try:
-        excel = win32com.client.Dispatch("Excel.Application")
-        # --- CRITICAL FIX: Disable events to prevent interference ---
-        excel.EnableEvents = False
-        excel.Visible = False
-        excel.DisplayAlerts = False
+        # Choose the appropriate implementation based on the macro name
+        if macro_name == 'SortFamilyMembers':
+            success, message = sort_format_and_number_in_python(EXCEL_FILE_PATH)
+        elif macro_name == 'CreateRegisterPDF':
+            success, message = create_register_pdf_python(EXCEL_FILE_PATH)
+        elif macro_name == 'PrintToPDF_Landscape1':
+            success, message = print_to_pdf_landscape_python(EXCEL_FILE_PATH)
+        elif macro_name == 'UpdateDate':
+            success, message = update_voorblad_date_with_openpyxl(EXCEL_FILE_PATH)
+        else:
+            # For other macros, try the VBS approach
+            try:
+                success, message = run_macro_via_vbs(EXCEL_FILE_PATH, macro_name)
+            except Exception as e:
+                success = False
+                message = f"VBS execution failed: {str(e)}"
         
-        wb = excel.Workbooks.Open(EXCEL_FILE_PATH)
+        # Restore Sheet6 data if needed
+        if sheet6_data:
+            restore_sheet6_data(EXCEL_FILE_PATH, sheet6_data)
         
-        # Define the full macro path
-        # The VBA code shows the macros are in the ThisWorkbook module, not a specific sheet module.
-        full_macro_name = f"'{os.path.basename(EXCEL_FILE_PATH)}'!{macro_name}"
-        print(f"Attempting to run macro: {full_macro_name}")
-
-        # Run the macro
-        excel.Application.Run(full_macro_name)
-        
-        message = f"Makro '{macro_name}' suksesvol uitgevoer."
-        
-        # The macro should handle saving, but we save again to be sure.
-        wb.Save()
-        wb.Close()
-        
-        # --- CRITICAL FIX: Re-enable events before quitting ---
-        excel.EnableEvents = True
-        excel.Quit()
-        pythoncom.CoUninitialize()
-        
-        return jsonify({'success': True, 'message': message})
+        return jsonify({'success': success, 'message': message})
     
     except Exception as e:
         print(f"Error running macro '{macro_name}': {e}")
-        if excel:
-            # Ensure Excel is closed properly on error
-            excel.EnableEvents = True
-            try:
-                wb.Close(False) # Close without saving changes
-            except: pass
-            excel.Quit()
-        return jsonify({'success': False, 'message': f"Fout met makro '{macro_name}': {e}"})
-    
-    finally:
+        
+        # Attempt to restore Sheet6 data even if there was an error
+        if sheet6_data:
+            restore_sheet6_data(EXCEL_FILE_PATH, sheet6_data)
+        
+        return jsonify({'success': False, 'message': f"Error: {str(e)}"})
+
+
+
+
+
+
+def run_macro_via_vbs(excel_path, macro_name):
+    """Run an Excel macro using a VBS script"""
+    try:
+        # Create a temporary VBS script
+        vbs_path = os.path.join(os.path.dirname(excel_path), "run_macro_temp.vbs")
+        
+        # Map macro names to their full paths if needed
+        macro_mapping = {
+            'SortFamilyMembers': 'Sheet3.SortFamilyMembers',
+            'CreateRegisterPDF': 'Sheet3.CreateRegisterPDF',
+            'PrintToPDF_Landscape': 'Sheet3.PrintToPDF_Landscape1',
+            'UpdateDate': 'ThisWorkbook.update_voorblad_date'
+        }
+        
+        full_macro_name = macro_mapping.get(macro_name, macro_name)
+        
+        # Write the VBS script
+        with open(vbs_path, 'w') as f:
+            f.write(f'''
+            On Error Resume Next
+            
+            ' Display any errors that occur
+            Sub DisplayError()
+                If Err.Number <> 0 Then
+                    WScript.Echo "Error " & Err.Number & ": " & Err.Description
+                    WScript.Quit 1
+                End If
+            End Sub
+            
+            ' Run the macro
+            Sub RunMacro()
+                Dim xl, wb
+                
+                ' Create Excel application
+                Set xl = CreateObject("Excel.Application")
+                If Err.Number <> 0 Then
+                    WScript.Echo "Failed to create Excel application: " & Err.Description
+                    WScript.Quit 1
+                End If
+                
+                ' Make Excel visible and disable alerts
+                xl.Visible = True
+                xl.DisplayAlerts = False
+                
+                ' Open the workbook
+                Set wb = xl.Workbooks.Open("{excel_path}")
+                If Err.Number <> 0 Then
+                    WScript.Echo "Failed to open workbook: " & Err.Description
+                    xl.Quit
+                    WScript.Quit 1
+                End If
+                
+                ' Run the macro
+                xl.Run "{full_macro_name}"
+                If Err.Number <> 0 Then
+                    WScript.Echo "Failed to run macro: " & Err.Description
+                    wb.Close False
+                    xl.Quit
+                    WScript.Quit 1
+                End If
+                
+                ' Save and close
+                wb.Save
+                wb.Close
+                xl.Quit
+                
+                WScript.Echo "Success"
+            End Sub
+            
+            ' Main execution
+            RunMacro
+            DisplayError
+            ''')
+        
+        # Run the VBS script
+        import subprocess
+        result = subprocess.run(['cscript', '//NoLogo', vbs_path], capture_output=True, text=True)
+        
+        # Clean up
         try:
-            pythoncom.CoUninitialize()
-        except: pass
+            os.remove(vbs_path)
+        except:
+            pass
+        
+        # Check the result
+        if result.returncode == 0 and "Success" in result.stdout:
+            return True, f"Makro '{macro_name}' suksesvol uitgevoer"
+        else:
+            error_msg = result.stdout.strip() or result.stderr.strip() or f"Unknown error running macro '{macro_name}'"
+            print(f"VBS Error: {error_msg}")
+            return False, error_msg
+            
+    except Exception as e:
+        print(f"Error in run_macro_via_vbs: {e}")
+        return False, str(e)
+
+
+
 
 @app.route('/get_current_date')
 def get_current_date():
@@ -561,28 +1068,43 @@ def get_current_date():
 
 @app.route('/update_date', methods=['POST'])
 def update_date():
-    print("update_date endpoint called")
     if 'user' not in session:
-        print("User not authenticated")
         return jsonify({'success': False, 'message': 'Not authenticated'}), 401
     
     try:
-        print(f"Excel file path: {EXCEL_FILE_PATH}")
-        print("Calling update_voorblad_date()")
-        # Update the date in the Excel file
-        success = update_voorblad_date()
-        print(f"update_voorblad_date() returned: {success}")
+        print("Updating date...")
+        # Use the simpler function
+        success, message = update_voorblad_date_simple(EXCEL_FILE_PATH)
         
         if success:
-            current_date = get_afrikaans_date()
-            print(f"Date updated successfully to: {current_date}")
-            return jsonify({'success': True, 'date': current_date, 'message': 'Datum suksesvol opgedateer'})
+            return jsonify({'success': True, 'message': message})
         else:
-            print("Failed to update date")
-            return jsonify({'success': False, 'message': 'Kon nie datum opdateer nie'})
+            return jsonify({'success': False, 'message': message})
     except Exception as e:
-        print(f"Error updating date: {e}")
+        print(f"Error in update_date endpoint: {e}")
         return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/recover_excel', methods=['GET'])
+def recover_excel():
+    """Emergency endpoint to restore Excel file from backup"""
+    if 'user' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+        
+    try:
+        backup_path = EXCEL_FILE_PATH.replace('.xlsm', '_backup.xlsm')
+        
+        # Check if backup exists
+        if not os.path.exists(backup_path):
+            return jsonify({'success': False, 'message': 'No backup file found'})
+            
+        # Restore from backup
+        import shutil
+        shutil.copy2(backup_path, EXCEL_FILE_PATH)
+        
+        return jsonify({'success': True, 'message': 'Excel file restored from backup'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 
 @app.route('/get_data')
 def get_data():
