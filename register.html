@@ -564,28 +564,50 @@
         <a href="/dashboard" class="btn">
             <i class="fas fa-arrow-left"></i> Terug na Dashboard
         </a>
-<div class="dropdown">
-    <button class="btn btn-accent dropdown-toggle">
-        <i class="fas fa-cog"></i> Makros <i class="fas fa-caret-down"></i>
-    </button>
-    <div class="dropdown-content">
-        <a href="#" onclick="runMacro('SortFamilyMembers'); return false;">
-            <i class="fas fa-sort-alpha-down"></i> Sorteer en Nommer Families
-        </a>
-        <a href="#" onclick="runMacro('CreateRegisterPDF'); return false;">
-            <i class="fas fa-file-pdf"></i> Skep Register PDF
-        </a>
-        <a href="#" onclick="runMacro('PrintToPDF_Landscape'); return false;">
-            <i class="fas fa-print"></i> Druk na PDF (Landskap)
-        </a>
-    </div>
+        <div class="dropdown">
+            <button class="btn btn-accent dropdown-toggle">
+                <i class="fas fa-cog"></i> Makros <i class="fas fa-caret-down"></i>
+            </button>
+			<button class="btn btn-primary date-update-btn" onclick="updateDate()">
+				<i class="fas fa-calendar-alt"></i> Opdateer Datum
+			</button>
+			<button class="btn btn-danger" onclick="recoverExcel()" style="display: none;" id="recoverButton">
+				<i class="fas fa-life-ring"></i> Herstel Excel Lêer
+			</button>
+			
+			
+            
+        </div>
+		
+		
+<div class="macro-section">
+  <h3>Register Makros</h3>
+  <div class="macro-buttons">
+    <button class="btn btn-primary" onclick="runMacro('SortFamilyMembers')">
+      <i class="fas fa-sort-alpha-down"></i> Sorteer Familie Lede </button>
+    <button class="btn btn-accent" onclick="runMacro('AssignFamilyNumbers')">
+      <i class="fas fa-list-ol"></i> Wys Familie Nommers </button>
+    <button class="btn btn-primary" onclick="runMacro('CreateRegisterPDF')">
+      <i class="fas fa-file-pdf"></i> Skep Register PDF </button>
+    <button class="btn btn-accent" onclick="runMacro('PrintToPDF_Landscape')">
+      <i class="fas fa-print"></i> Druk Landskap PDF </button>
+    <button class="btn btn-primary" onclick="runMacro('UpdateDate')">
+      <i class="fas fa-calendar-alt"></i> Opdateer Datum </button>
+  </div>
 </div>
-
+		
+		
+		
+        <!-- Add this new button -->
+        <button class="btn btn-primary" onclick="updateDate()">
+            <i class="fas fa-calendar-alt"></i> Opdateer Datum
+        </button>
         <a href="/logout" class="btn">
             <i class="fas fa-sign-out-alt"></i> Teken Uit
         </a>
     </div>
 </header>
+
 
 
 
@@ -649,6 +671,29 @@
             </table>
         </div>
     </div>
+
+
+<div class="dropdown-content">
+    <a href="#" onclick="runMacro('SortFamilyMembers'); return false;">
+        <i class="fas fa-sort-alpha-down"></i> Sorteer en Nommer Families
+    </a>
+    <a href="#" onclick="runMacro('CreateRegisterPDF'); return false;">
+        <i class="fas fa-file-pdf"></i> Skep Register PDF
+    </a>
+    <a href="#" onclick="runMacro('PrintToPDF_Landscape1'); return false;">
+        <i class="fas fa-print"></i> Druk na PDF (Landskap)
+    </a>
+    <a href="#" onclick="runMacro('UpdateDate'); return false;">
+        <i class="fas fa-calendar-alt"></i> Opdateer Datum
+    </a>
+</div>
+
+
+
+
+
+
+
 
 
 <!-- Add Person Modal -->
@@ -755,6 +800,53 @@
             });
         });
 
+// Function to recover Excel file
+async function recoverExcel() {
+    if (confirm('Hierdie sal die Excel lêer herstel vanaf die laaste rugsteun. Wil jy voortgaan?')) {
+        showProgress('Herstel Excel lêer...');
+        
+        try {
+            const response = await fetch('/recover_excel');
+            const result = await response.json();
+            
+            if (result.success) {
+                hideProgress();
+                showMessage(result.message, 'success');
+                // Hide the recover button
+                document.getElementById('recoverButton').style.display = 'none';
+            } else {
+                hideProgress();
+                showMessage('Fout: ' + result.message, 'error');
+            }
+        } catch (error) {
+            hideProgress();
+            showMessage('Kon nie Excel lêer herstel nie: ' + error, 'error');
+        }
+    }
+}
+
+// Show recovery button after a failed operation
+function showRecoveryButton() {
+    document.getElementById('recoverButton').style.display = 'inline-flex';
+}
+
+// Update the error handler in updateDate function
+function updateDate() {
+    // ... existing code ...
+    
+    catch (error) {
+        hideProgress();
+        console.error('Error updating date:', error);
+        showMessage('Kon nie datum opdateer nie. Probeer weer.', 'error');
+        
+        // Show recovery button
+        showRecoveryButton();
+    }
+}
+
+
+
+
     async function loadRegisterData() {
         showProgress('Laai register data...');
         
@@ -848,6 +940,53 @@
             showMessage('Kon nie data laai nie. Probeer weer.', 'error');
         }
     }
+
+
+
+// Function to update the date on the Voorblad
+async function updateDate() {
+    showProgress('Opdateer datum...');
+    
+    try {
+        const response = await fetch('/update_date', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            // Set a timeout to prevent hanging
+            signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
+        
+        updateProgress(75);
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateProgress(100);
+            showMessage(result.message, 'success');
+            setTimeout(() => {
+                hideProgress();
+            }, 1000);
+        } else {
+            hideProgress();
+            showMessage('Fout: ' + (result.message || 'Kon nie datum opdateer nie'), 'error');
+        }
+    } catch (error) {
+        hideProgress();
+        console.error('Error updating date:', error);
+        showMessage('Kon nie datum opdateer nie. Probeer weer.', 'error');
+        
+        // If it was a timeout error, show a more specific message
+        if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+            showMessage('Die versoek het te lank geneem. Probeer die herstel-knoppie.', 'error');
+        }
+    }
+}
+
+
+
+
+
         
         function showMessage(text, type) {
             const messageElement = document.getElementById('message');
@@ -882,8 +1021,7 @@
         }
 
 
-// Function to run Excel macros
-async function runMacro(macroName) {
+/async function runMacro(macroName) {
     showProgress(`Hardloop ${macroName} makro...`);
     
     // Map the macro names to their actual VBA function names if needed
@@ -897,13 +1035,28 @@ async function runMacro(macroName) {
     
     try {
         console.log(`Running macro: ${actualMacroName}`);
-        const response = await fetch('/run_macro', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ macroName: actualMacroName })
-        });
+        
+        // Try the /run_macro endpoint first
+        let response;
+        try {
+            response = await fetch('/run_macro', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ macroName: actualMacroName })
+            });
+        } catch (e) {
+            // If that fails, try the /api/run_macro endpoint
+            console.log("Falling back to /api/run_macro endpoint");
+            response = await fetch('/api/run_macro', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ macro: actualMacroName })
+            });
+        }
         
         updateProgress(75);
         
@@ -929,6 +1082,8 @@ async function runMacro(macroName) {
         showMessage('Kon nie makro hardloop nie. Probeer weer.', 'error');
     }
 }
+
+
 
 
 
