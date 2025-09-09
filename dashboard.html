@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerk Register - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4CAF50;
+            --primary-dark: #1b5e20;
+            --accent: #ff9800;
+            --accent-dark: #f57c00;
+            --text-dark: #333;
+            --text-light: #666;
+            --bg-light: #f8f9fa;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Welcome Card */
+        .welcome-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .welcome-icon {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .welcome-text h2 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-text p {
+            color: var(--text-light);
+        }
+
+        /* Date Section */
+        .date-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .date-info h2 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .date-display {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .update-btn {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .update-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 152, 0, 0.2);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .card-content h3 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .card-content p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .card-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .card-btn:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        }
+
+        /* Message Alert */
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+
+    /* Progress bar styles */
+    .progress-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .progress-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        width: 300px;
+    }
+    
+    .progress-text {
+        margin-bottom: 1rem;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .progress-bar {
+        height: 6px;
+        background: #e0e0e0;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .progress-bar-inner {
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(46, 125, 50, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--primary);
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 1rem;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+
+
+
+
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .welcome-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .date-section {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-overlay" id="progressOverlay">
+    <div class="progress-container">
+        <div class="progress-spinner"></div>
+        <div class="progress-text" id="progressText">Verwerking...</div>
+        <div class="progress-bar">
+            <div class="progress-bar-inner" id="progressBar"></div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Header -->
+    <header class="header">
+        <h1>Kerk Register Dashboard</h1>
+        <a href="/logout" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Teken Uit
+        </a>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Welcome Card -->
+        <div class="welcome-card">
+            <div class="welcome-icon">
+                <i class="fas fa-church"></i>
+            </div>
+            <div class="welcome-text">
+                <h2>Welkom by die Kerk Register</h2>
+                <p>Bestuur u kerk se lidmaatskapregister, verjaarsdae en huweliksherdenkings op een plek</p>
+            </div>
+        </div>
+
+        <!-- Date Section -->
+        <div class="date-section">
+            <div class="date-info">
+                <h2>Huidige Datum in Voorblad</h2>
+                <div class="date-display" id="currentDate">Besig om datum te laai...</div>
+            </div>
+            <button class="update-btn" onclick="updateDate()">
+                <i class="fas fa-sync-alt"></i> Opdateer Datum
+            </button>
+        </div>
+        
+        <!-- Message Alert -->
+        <div id="message" class="message"></div>
+
+        <!-- Dashboard Cards -->
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Register</h3>
+                    <p>Bekyk en bestuur die hoofregister van lidmate. Voeg nuwe lede by, wysig bestaande inligting of verwyder lede.</p>
+                    <a href="/register" class="card-btn">Gaan na Register</a>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-birthday-cake"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Verjaarsdae</h3>
+                    <p>Sien verjaarsdae van lidmate. Hou dop van spesiale dagge en stuur gelukwense namens die kerk.</p>
+                    <a href="/verjaarsdae" class="card-btn">Bekyk Verjaarsdae</a>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-ring"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Huweliksherdenkings</h3>
+                    <p>Sien huweliksherdenkings van lidmate. Vier spesiale herdenkings en erken troue paartjies.</p>
+                    <a href="/huwelik" class="card-btn">Bekyk Herdenkings</a>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Rapporte</h3>
+                    <p>Genereer PDF rapporte van die register, verjaarsdae of huweliksherdenkings vir argivering of drukdoeleindes.</p>
+                    <a href="#" class="card-btn">Genereer Rapporte</a>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="card-content">
+                    <h3>E-pos Kommunikasie</h3>
+                    <p>Stuur e-posboodskappe aan individuele lede of die hele gemeenskap. Handige kommunikasie hulpmiddel.</p>
+                    <a href="#" class="card-btn">Stuur E-posse</a>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Stelsel Instellings</h3>
+                    <p>Pas die stelsel aan volgens u kerk se behoeftes. Verander datums, formate of ander instellings.</p>
+                    <a href="#" class="card-btn">Instellings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+	
+	    // Progress functions
+    function showProgress(text = 'Verwerking...') {
+        document.getElementById('progressText').textContent = text;
+        document.getElementById('progressOverlay').classList.add('active');
+    }
+    
+    function updateProgress(percent) {
+        document.getElementById('progressBar').style.width = percent + '%';
+    }
+    
+    function hideProgress() {
+        document.getElementById('progressOverlay').classList.remove('active');
+        // Reset progress bar
+        setTimeout(() => {
+            document.getElementById('progressBar').style.width = '0%';
+        }, 300);
+    }
+    
+
+	
+	
+        // Display the current date when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchCurrentDate();
+        });
+        
+        // Function to fetch the current date from the server
+    async function fetchCurrentDate() {
+        showProgress('Laai datum...');
+        
+        try {
+            const response = await fetch('/get_current_date');
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('currentDate').textContent = data.date;
+                updateProgress(100);
+                setTimeout(hideProgress, 500);
+            } else {
+                document.getElementById('currentDate').textContent = 'Kon nie datum kry nie';
+                hideProgress();
+            }
+        } catch (error) {
+            hideProgress();
+            console.error('Error fetching date:', error);
+            document.getElementById('currentDate').textContent = 'Kon nie datum kry nie';
+        }
+    }
+        
+        // Function to update the date
+    async function updateDate() {
+        showProgress('Datum opdatering...');
+        
+        try {
+            console.log('Updating date...');
+            const response = await fetch('/update_date', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+            
+            updateProgress(100);
+            
+            const messageElement = document.getElementById('message');
+            
+            if (data.success) {
+                messageElement.textContent = 'Datum suksesvol opgedateer!';
+                messageElement.className = 'message success';
+                document.getElementById('currentDate').textContent = data.date;
+                console.log('Date updated successfully to:', data.date);
+            } else {
+                messageElement.textContent = 'Kon nie datum opdateer nie: ' + data.message;
+                messageElement.className = 'message error';
+                console.error('Failed to update date:', data.message);
+            }
+            
+            messageElement.style.display = 'block';
+            
+            // Hide the message after 5 seconds
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+                hideProgress();
+            }, 5000);
+            
+        } catch (error) {
+            hideProgress();
+            console.error('Error updating date:', error);
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = 'Kon nie datum opdateer nie. Probeer weer.';
+            messageElement.className = 'message error';
+            messageElement.style.display = 'block';
+        }
+    }
+    </script>
+</body>
+</html>
