@@ -1,294 +1,1237 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+<!DOCTYPE html>
+<html lang="af">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerk Register - Lidmaatskapregister</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4CAF50;
+            --primary-dark: #1b5e20;
+            --accent: #ff9800;
+            --accent-dark: #f57c00;
+            --text-dark: #333;
+            --text-light: #666;
+            --bg-light: #f8f9fa;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--card-bg);
+            color: var(--primary);
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            box-shadow: var(--shadow);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: white;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1800px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Back Link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .back-link:hover {
+            color: var(--primary-dark);
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Family grouping styles */
+        .family-group {
+            border-left: 4px solid var(--primary);
+        }
+
+        .family-1 {
+            background-color: #f1f8e9;
+        }
+
+        .family-2 {
+            background-color: #e8f5e9;
+        }
+
+        .family-id-cell {
+            font-weight: bold;
+            color: var(--primary);
+            background-color: #e8f5e9;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.9rem;
+        }
+
+        .edit-btn {
+            background-color: #bbdefb;
+            color: #0d47a1;
+        }
+
+        .edit-btn:hover {
+            background-color: #90caf9;
+        }
+
+        .delete-btn {
+            background-color: #ffcdd2;
+            color: #b71c1c;
+        }
+
+        .delete-btn:hover {
+            background-color: #ef9a9a;
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        /* Message Alert */
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Search and filter section */
+        .search-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 1rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+
+    /* Progress bar styles */
+    .progress-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .progress-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        width: 300px;
+    }
+    
+    .progress-text {
+        margin-bottom: 1rem;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .progress-bar {
+        height: 6px;
+        background: #e0e0e0;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .progress-bar-inner {
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(46, 125, 50, 0.3);
+        border-radius: 50%;
+        border-top-color: var(--primary);
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 1rem;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+
+/* Dropdown styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
 }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
-}
-
-.family-group {
-    border-left: 5px solid #2e7d32;
-    background-color: #f1f8e9;
-}
-
-/* Add alternating colors for different families */
-.family-1 {
-    background-color: #f1f8e9;
-}
-
-.family-2 {
-    background-color: #e8f5e9;
-}
-
-/* Make the family ID cell more prominent */
-.family-id-cell {
-    font-weight: bold;
-    color: #2e7d32;
-    background-color: #e8f5e9;
-}
-
-/* Login Page Styles */
-.login-page {
+.dropdown-toggle {
     display: flex;
-    justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    gap: 0.5rem;
 }
 
-.login-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 400px;
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 220px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    z-index: 1;
+    margin-top: 0.5rem;
+    overflow: hidden;
 }
 
-.login-form h1 {
-    text-align: center;
+.dropdown-content a {
     color: #333;
-    margin-bottom: 0.5rem;
-    font-size: 1.5rem;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
 }
 
-.login-form h2 {
-    text-align: center;
-    color: #666;
-    margin-bottom: 2rem;
-    font-weight: normal;
+.dropdown-content a:hover {
+    background-color: #f1f8e9;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Animation for dropdown */
+.dropdown-content {
+    transform-origin: top right;
+    animation: dropdownFade 0.2s ease;
+}
+
+@keyframes dropdownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #2e7d32 0%, #4CAF50 100%);
+    color: white;
+    padding: 1.2rem;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.close-modal {
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    opacity: 0.8;
+}
+
+.modal form {
+    padding: 1.5rem;
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: #555;
+    color: #333;
 }
 
 .form-group input {
     width: 100%;
-    padding: 0.75rem;
-    border: 2px solid #ddd;
-    border-radius: 5px;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     font-size: 1rem;
-    transition: border-color 0.3s;
+    transition: all 0.3s;
 }
 
 .form-group input:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
     outline: none;
-    border-color: #667eea;
 }
 
-.login-btn {
-    width: 100%;
-    padding: 0.75rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-cancel {
+    padding: 0.8rem 1.5rem;
+    background-color: #f44336;
     color: white;
     border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.login-btn:hover {
-    transform: translateY(-2px);
-}
-
-.error-message {
-    background-color: #fee;
-    color: #c33;
-    padding: 0.75rem;
-    border-radius: 5px;
-    margin-bottom: 1rem;
-    text-align: center;
-}
-
-/* Dashboard Styles */
-.navbar {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1rem 0;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.nav-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 2rem;
-}
-
-.nav-container h1 {
-    font-size: 1.5rem;
-}
-
-.nav-links {
-    display: flex;
-    gap: 1rem;
-}
-
-.nav-link {
-    color: white;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.nav-link:hover, .nav-link.active {
-    background-color: rgba(255,255,255,0.2);
-}
-
-.nav-link.logout {
-    background-color: rgba(255,255,255,0.1);
-}
-
-.main-content {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 2rem;
-}
-
-.sheet-container {
-    display: none;
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.sheet-container.active {
-    display: block;
-}
-
-.sheet-container h2 {
-    margin-bottom: 2rem;
-    color: #333;
-    border-bottom: 2px solid #667eea;
-    padding-bottom: 0.5rem;
-}
-
-.sheet-actions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 2rem;
-}
-
-.action-btn {
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: transform 0.2s;
-}
-
-.action-btn:hover {
-    transform: translateY(-2px);
-}
-
-.date-display {
-    font-size: 1.2rem;
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    text-align: center;
-    margin: 1rem 0;
-}
-
-.date-section {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    background-color: #f0f8ff; /* Light blue background to make it stand out */
-    padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border: 2px solid #2e7d32; /* Add a border to make it more visible */
+    cursor: pointer;
+    transition: all 0.3s;
 }
 
-.date-info {
-    flex: 1;
+.btn-submit {
+    padding: 0.8rem 1.5rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
 }
 
-.date-section h2 {
-    color: #2e7d32;
-    margin-top: 0;
-    margin-bottom: 10px;
-}
-
-.date-display {
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-#message {
-    margin-top: 10px;
-    padding: 10px;
-    border-radius: 4px;
-    display: none;
-}
-
-.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-.update-btn {
-    background-color: #ff9800;
-}
-
-.update-btn:hover {
-    background-color: #f57c00;
+.btn-cancel:hover, .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 
 
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            th, td {
+                padding: 0.8rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .header-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .search-section {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+<header class="header">
+    <h1>Kerk Register - Lidmaatskapregister</h1>
+    <div class="header-actions">
+        <a href="/dashboard" class="btn">
+            <i class="fas fa-arrow-left"></i> Terug na Dashboard
+        </a>
+        <div class="dropdown">
+            <button class="btn btn-accent dropdown-toggle">
+                <i class="fas fa-cog"></i> Makros <i class="fas fa-caret-down"></i>
+            </button>
+			<button class="btn btn-primary date-update-btn" onclick="updateDate()">
+				<i class="fas fa-calendar-alt"></i> Opdateer Datum
+			</button>
+			<button class="btn btn-danger" onclick="recoverExcel()" style="display: none;" id="recoverButton">
+				<i class="fas fa-life-ring"></i> Herstel Excel Lêer
+			</button>
+			
+			
+            
+        </div>
+		
+		
+<div class="macro-section">
+  <h3>Register Makros</h3>
+  <div class="macro-buttons">
+    <button class="btn btn-primary" onclick="runMacro('SortFamilyMembers')">
+      <i class="fas fa-sort-alpha-down"></i> Sorteer Familie Lede </button>
+    <button class="btn btn-accent" onclick="runMacro('AssignFamilyNumbers')">
+      <i class="fas fa-list-ol"></i> Wys Familie Nommers </button>
+    <button class="btn btn-primary" onclick="runMacro('CreateRegisterPDF')">
+      <i class="fas fa-file-pdf"></i> Skep Register PDF </button>
+    <button class="btn btn-accent" onclick="runMacro('PrintToPDF_Landscape')">
+      <i class="fas fa-print"></i> Druk Landskap PDF </button>
+    <button class="btn btn-primary" onclick="runMacro('UpdateDate')">
+      <i class="fas fa-calendar-alt"></i> Opdateer Datum </button>
+  </div>
+</div>
+		
+		
+		
+        <!-- Add this new button -->
+        <button class="btn btn-primary" onclick="updateDate()">
+            <i class="fas fa-calendar-alt"></i> Opdateer Datum
+        </button>
+        <a href="/logout" class="btn">
+            <i class="fas fa-sign-out-alt"></i> Teken Uit
+        </a>
+    </div>
+</header>
 
 
 
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .nav-container {
-        flex-direction: column;
-        gap: 1rem;
+<div class="progress-overlay" id="progressOverlay">
+    <div class="progress-container">
+        <div class="progress-spinner"></div>
+        <div class="progress-text" id="progressText">Verwerking...</div>
+        <div class="progress-bar">
+            <div class="progress-bar-inner" id="progressBar"></div>
+        </div>
+    </div>
+</div>
+
+    <!-- Main Content -->
+    <div class="container">
+       
+<!-- Search and Filter Section -->
+<div class="container">
+   
+    <!-- Search and Filter Section -->
+    <div class="search-section">
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" placeholder="Soek in register..." id="searchInput">
+        </div>
+        <button class="btn btn-primary" onclick="addEntry()">
+            <i class="fas fa-plus"></i> Voeg Nuwe Inskrywing By
+        </button>
+    </div>
+
+    <!-- Message Alert -->
+    <div id="message" class="message"></div>
+
+    <!-- Table Container -->
+    <div class="table-container">
+
+        <!-- Table Container -->
+        <div class="table-container">
+            <table id="registerTable">
+                <thead>
+                    <tr>
+                        <th>Familie ID</th>
+                        <th>Nommer</th>
+                        <th>Van</th>
+                        <th>Naam</th>
+                        <th>Verjaarsdag</th>
+                        <th>Huwelik</th>
+                        <th>Selfoon</th>
+                        <th>Adres</th>
+                        <th>E-pos</th>
+                        <th>Aksies</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="10" class="loading">
+                            <i class="fas fa-spinner fa-spin"></i> Besig om data te laai...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+<div class="dropdown-content">
+    <a href="#" onclick="runMacro('SortFamilyMembers'); return false;">
+        <i class="fas fa-sort-alpha-down"></i> Sorteer en Nommer Families
+    </a>
+    <a href="#" onclick="runMacro('CreateRegisterPDF'); return false;">
+        <i class="fas fa-file-pdf"></i> Skep Register PDF
+    </a>
+    <a href="#" onclick="runMacro('PrintToPDF_Landscape1'); return false;">
+        <i class="fas fa-print"></i> Druk na PDF (Landskap)
+    </a>
+    <a href="#" onclick="runMacro('UpdateDate'); return false;">
+        <i class="fas fa-calendar-alt"></i> Opdateer Datum
+    </a>
+</div>
+
+
+
+
+
+
+
+
+
+<!-- Add Person Modal -->
+<div class="modal" id="addPersonModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Voeg Nuwe Persoon By</h2>
+            <span class="close-modal">×</span>
+        </div>
+        <form id="addPersonForm">
+            <div class="form-group">
+                <label for="van">Van:</label>
+                <input type="text" id="van" name="van" required>
+            </div>
+            <div class="form-group">
+                <label for="naam">Naam:</label>
+                <input type="text" id="naam" name="naam" required>
+            </div>
+            <div class="form-group">
+                <label for="verj">Verjaarsdag (dd-mmm):</label>
+                <input type="text" id="verj" name="verj" placeholder="bv. 15-Sep">
+            </div>
+            <div class="form-group">
+                <label for="huwelik">Huweliksdatum (dd-mmm):</label>
+                <input type="text" id="huwelik" name="huwelik" placeholder="bv. 20-Jun">
+            </div>
+            <div class="form-group">
+				<label for="selfoon">Selfoon:</label>
+				<input type="text" id="selfoon" name="selfoon" placeholder="bv. 082 123 4567" pattern="[0-9]{3} [0-9]{3} [0-9]{4}">
+				<small>Formaat: 000 000 0000</small>
+			</div>
+            <div class="form-group">
+                <label for="adres">Adres:</label>
+                <input type="text" id="adres" name="adres">
+            </div>
+            <div class="form-group">
+                <label for="epos">E-pos:</label>
+                <input type="email" id="epos" name="epos">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal('addPersonModal')">Kanselleer</button>
+                <button type="submit" class="btn-submit">Stoor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+    <script>
+	
+   // Progress functions
+    function showProgress(text = 'Verwerking...') {
+        document.getElementById('progressText').textContent = text;
+        document.getElementById('progressOverlay').classList.add('active');
     }
     
-    .nav-links {
-        flex-wrap: wrap;
-        justify-content: center;
+    function updateProgress(percent) {
+        document.getElementById('progressBar').style.width = percent + '%';
     }
     
-    .sheet-actions {
-        flex-direction: column;
-    }
-    
-    .action-btn {
-        width: 100%;
+    function hideProgress() {
+        document.getElementById('progressOverlay').classList.remove('active');
+        // Reset progress bar
+        setTimeout(() => {
+            document.getElementById('progressBar').style.width = '0%';
+        }, 300);
+    }	
+	
+	
+	
+	
+	
+	
+	
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRegisterData();
+            
+            // Initialize search functionality
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('keyup', function() {
+                const searchText = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#registerTable tbody tr');
+                
+                rows.forEach(row => {
+                    if (row.classList.contains('loading')) return;
+                    
+                    const cells = row.querySelectorAll('td');
+                    let found = false;
+                    
+                    cells.forEach(cell => {
+                        if (cell.textContent.toLowerCase().includes(searchText)) {
+                            found = true;
+                        }
+                    });
+                    
+                    row.style.display = found ? '' : 'none';
+                });
+            });
+        });
+
+// Function to recover Excel file
+async function recoverExcel() {
+    if (confirm('Hierdie sal die Excel lêer herstel vanaf die laaste rugsteun. Wil jy voortgaan?')) {
+        showProgress('Herstel Excel lêer...');
+        
+        try {
+            const response = await fetch('/recover_excel');
+            const result = await response.json();
+            
+            if (result.success) {
+                hideProgress();
+                showMessage(result.message, 'success');
+                // Hide the recover button
+                document.getElementById('recoverButton').style.display = 'none';
+            } else {
+                hideProgress();
+                showMessage('Fout: ' + result.message, 'error');
+            }
+        } catch (error) {
+            hideProgress();
+            showMessage('Kon nie Excel lêer herstel nie: ' + error, 'error');
+        }
     }
 }
+
+// Show recovery button after a failed operation
+function showRecoveryButton() {
+    document.getElementById('recoverButton').style.display = 'inline-flex';
+}
+
+// Update the error handler in updateDate function
+function updateDate() {
+    // ... existing code ...
+    
+    catch (error) {
+        hideProgress();
+        console.error('Error updating date:', error);
+        showMessage('Kon nie datum opdateer nie. Probeer weer.', 'error');
+        
+        // Show recovery button
+        showRecoveryButton();
+    }
+}
+
+
+
+
+    async function loadRegisterData() {
+        showProgress('Laai register data...');
+        
+        try {
+            const response = await fetch('/get_data');
+            const result = await response.json();
+            
+            updateProgress(50);
+            
+            if (result.error) {
+                showMessage('Fout: ' + result.error, 'error');
+                hideProgress();
+                return;
+            }
+            
+            const tbody = document.querySelector('#registerTable tbody');
+            tbody.innerHTML = '';
+            
+            if (result.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="loading">Geen data gevind nie</td></tr>';
+                hideProgress();
+                return;
+            }
+            
+            // Track the current family ID and alternate family colors
+            let currentDisplayedFamilyId = null;
+            let familyColorClass = 'family-1';
+            
+            result.data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                // Determine if we should display the family ID
+                let displayFamilyId = '';
+                let isFirstInFamily = false;
+                
+                if (item.familyId) {
+                    // Add family styling
+                    row.classList.add('family-group');
+                    
+                    // Check if this is a new family
+                    if (item.familyId !== currentDisplayedFamilyId) {
+                        displayFamilyId = item.familyId;
+                        currentDisplayedFamilyId = item.familyId;
+                        isFirstInFamily = true;
+                        
+                        // Alternate between family-1 and family-2 classes
+                        familyColorClass = familyColorClass === 'family-1' ? 'family-2' : 'family-1';
+                    }
+                    
+                    // Add the current family color class
+                    row.classList.add(familyColorClass);
+                }
+                
+                // Create the HTML for the row
+                const familyIdCell = isFirstInFamily ? 
+                    `<td class="family-id-cell">${displayFamilyId}</td>` : 
+                    `<td></td>`;
+                    
+                row.innerHTML = `
+                    ${familyIdCell}
+                    <td>${item.number || ''}</td>
+                    <td>${item.van || ''}</td>
+                    <td>${item.naam || ''}</td>
+                    <td>${item.verj || ''}</td>
+                    <td>${item.huwelik || ''}</td>
+                    <td>${item.selfoon || ''}</td>
+                    <td>${item.adres || ''}</td>
+                    <td>${item.epos || ''}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit-btn" onclick="editEntry(${item.number})">
+                                <i class="fas fa-edit"></i> Wysig
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteEntry(${item.number})">
+                                <i class="fas fa-trash"></i> Verwyder
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                
+                // Update progress as we process each row
+                updateProgress(50 + Math.floor((index / result.data.length) * 50));
+            });
+            
+            setTimeout(hideProgress, 500);
+            
+        } catch (error) {
+            hideProgress();
+            console.error('Error loading data:', error);
+            showMessage('Kon nie data laai nie. Probeer weer.', 'error');
+        }
+    }
+
+
+
+// Function to update the date on the Voorblad
+async function updateDate() {
+    showProgress('Opdateer datum...');
+    
+    try {
+        const response = await fetch('/update_date', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            // Set a timeout to prevent hanging
+            signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
+        
+        updateProgress(75);
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateProgress(100);
+            showMessage(result.message, 'success');
+            setTimeout(() => {
+                hideProgress();
+            }, 1000);
+        } else {
+            hideProgress();
+            showMessage('Fout: ' + (result.message || 'Kon nie datum opdateer nie'), 'error');
+        }
+    } catch (error) {
+        hideProgress();
+        console.error('Error updating date:', error);
+        showMessage('Kon nie datum opdateer nie. Probeer weer.', 'error');
+        
+        // If it was a timeout error, show a more specific message
+        if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+            showMessage('Die versoek het te lank geneem. Probeer die herstel-knoppie.', 'error');
+        }
+    }
+}
+
+
+
+
+
+        
+        function showMessage(text, type) {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = text;
+            messageElement.className = `message ${type}`;
+            messageElement.style.display = 'block';
+            
+            // Hide the message after 5 seconds
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, 5000);
+        }
+        
+		function addEntry() {
+			// Reset form
+			document.getElementById('addPersonForm').reset();
+			
+			// Show modal
+			document.getElementById('addPersonModal').style.display = 'block';
+		}
+        
+        function editEntry(number) {
+            // Will implement this functionality later
+            showMessage('Wysig inskrywing funksionaliteit sal hier geïmplementeer word', 'success');
+        }
+        
+        function deleteEntry(number) {
+            if (confirm('Is jy seker jy wil hierdie inskrywing verwyder?')) {
+                // Will implement this functionality later
+                showMessage('Verwyder inskrywing funksionaliteit sal hier geïmplementeer word', 'success');
+            }
+        }
+
+
+/async function runMacro(macroName) {
+    showProgress(`Hardloop ${macroName} makro...`);
+    
+    // Map the macro names to their actual VBA function names if needed
+    const macroMapping = {
+        'SortFamilyMembers': 'SortFamilyMembers',
+        'CreateRegisterPDF': 'CreateRegisterPDF',
+        'PrintToPDF_Landscape': 'PrintToPDF_Landscape1'  // Note the "1" at the end
+    };
+    
+    const actualMacroName = macroMapping[macroName] || macroName;
+    
+    try {
+        console.log(`Running macro: ${actualMacroName}`);
+        
+        // Try the /run_macro endpoint first
+        let response;
+        try {
+            response = await fetch('/run_macro', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ macroName: actualMacroName })
+            });
+        } catch (e) {
+            // If that fails, try the /api/run_macro endpoint
+            console.log("Falling back to /api/run_macro endpoint");
+            response = await fetch('/api/run_macro', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ macro: actualMacroName })
+            });
+        }
+        
+        updateProgress(75);
+        
+        const result = await response.json();
+        console.log('Macro result:', result);  // Log the result for debugging
+        
+        if (result.success) {
+            updateProgress(100);
+            showMessage(result.message, 'success');
+            
+            // Reload the data after a short delay
+            setTimeout(() => {
+                loadRegisterData();
+            }, 1000);
+        } else {
+            hideProgress();
+            showMessage('Fout: ' + (result.message || 'Onbekende fout'), 'error');
+            console.error('Macro error:', result.message);
+        }
+    } catch (error) {
+        hideProgress();
+        console.error('Error running macro:', error);
+        showMessage('Kon nie makro hardloop nie. Probeer weer.', 'error');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// Close modal when clicking on X
+document.querySelectorAll('.close-modal').forEach(closeBtn => {
+    closeBtn.addEventListener('click', function() {
+        this.closest('.modal').style.display = 'none';
+    });
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+});
+
+// Handle form submission
+document.getElementById('addPersonForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    showProgress('Voeg persoon by...');
+    
+    const formData = {
+        van: document.getElementById('van').value,
+        naam: document.getElementById('naam').value,
+        verj: document.getElementById('verj').value,
+        huwelik: document.getElementById('huwelik').value,
+        selfoon: document.getElementById('selfoon').value,
+        adres: document.getElementById('adres').value,
+        epos: document.getElementById('epos').value
+    };
+    
+    try {
+        const response = await fetch('/add_person', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        updateProgress(75);
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateProgress(100);
+            closeModal('addPersonModal');
+            showMessage('Persoon suksesvol bygevoeg!', 'success');
+            
+            // Reload the data after a short delay
+            setTimeout(() => {
+                loadRegisterData();
+            }, 1000);
+        } else {
+            hideProgress();
+            showMessage('Fout: ' + result.message, 'error');
+        }
+    } catch (error) {
+        hideProgress();
+        console.error('Error adding person:', error);
+        showMessage('Kon nie persoon byvoeg nie. Probeer weer.', 'error');
+    }
+});
+
+
+// Phone number formatting
+function formatPhoneNumber(input) {
+    // Remove all non-digit characters
+    let numbers = input.value.replace(/[^0-9]/g, '');
+    
+    // Format as 000 000 0000
+    if (numbers.length > 0) {
+        let formatted = '';
+        if (numbers.length <= 3) {
+            formatted = numbers;
+        } else if (numbers.length <= 6) {
+            formatted = numbers.substring(0, 3) + ' ' + numbers.substring(3);
+        } else {
+            formatted = numbers.substring(0, 3) + ' ' + numbers.substring(3, 6) + ' ' + numbers.substring(6, 10);
+        }
+        input.value = formatted;
+    }
+}
+
+// Add event listener to phone input
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('selfoon');
+    phoneInput.addEventListener('input', function() {
+        formatPhoneNumber(this);
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    function sortRegister() {
+        showProgress('Sorteer register...');
+        
+        fetch('/api/SortFamilyMembers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateProgress(100);
+                showMessage(data.message, 'success');
+                setTimeout(() => {
+                    loadRegisterData();
+                }, 1000);
+            } else {
+                hideProgress();
+                showMessage('Kon nie register sorteer nie: ' + (data.message || 'Onbekende fout'), 'error');
+            }
+        })
+        .catch(error => {
+            hideProgress();
+            console.error('Error sorting register:', error);
+            showMessage('Kon nie register sorteer nie. Probeer weer.', 'error');
+        });
+    }
+
+    </script>
+</body>
+</html>
